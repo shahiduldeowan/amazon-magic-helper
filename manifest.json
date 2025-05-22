@@ -1,0 +1,35 @@
+{
+    "manifest_version": 3,
+    "name": "Amazon Magic Helper",
+    "version": "1.0.0",
+    "description": "A futuristic 3D floating assistant for Amazon",
+    "icons": {
+        "16": "icons/icon16.png",
+        "19": "icons/icon19.png",
+        "32": "icons/icon32.png",
+        "38": "icons/icon38.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+    },
+    "action": {
+        "default_popup": "index.html"
+    },
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "tabs"
+    ],
+    "content_scripts": [
+        {
+            "js": [
+                "src/content.jsx"
+            ],
+            "matches": [
+                "https://www.amazon.com/*"
+            ]
+        }
+    ],
+    "background": {
+        "service_worker": "src/background.js"
+    }
+}
