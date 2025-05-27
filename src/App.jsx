@@ -13,7 +13,7 @@ function Popup() {
           </div> */}
         <div className="text-center">
           <h1 className=" font-bold text-3xl text-white">
-            <span className="text-whisperOrange">🔮 Amazon</span> Scanner
+            🔮 Amazon Scanner
           </h1>
           <p className="text-sm text-muted-foreground">
             Ultra-premium Amazon insights.
