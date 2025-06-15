@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "Amazon Magic Helper",
     "version": "1.0.0",
-    "description": "A futuristic 3D floating assistant for Amazon",
+    "description": "Scrape and analyze Amazon product data with detailed insights.",
     "icons": {
         "16": "icons/icon16.png",
         "19": "icons/icon19.png",
@@ -22,7 +22,7 @@
     "content_scripts": [
         {
             "js": [
-                "src/content.jsx"
+                "src/content/index.jsx"
             ],
             "matches": [
                 "https://www.amazon.com/*"
