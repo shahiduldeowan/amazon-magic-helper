@@ -14,15 +14,16 @@ export const PRODUCT_SELECTORS = {
   SPONSORED: ".puis-sponsored-label-text",
   ASIN: "[data-component-props*='asin']",
   DATA_ASIN: "[data-asin]",
-  TITLE: "div[data-cy='title-recipe'] h2.a-size-base-plus span",
-  TITLE_1: "h2.a-size-medium span",
-  TITLE_2: `a[href*="/dp/"] h2, a[href*="/product/"] h2`,
+  TITLES: {
+    M_1: "div[data-cy='title-recipe'] h2.a-size-base-plus span",
+    M_2: "h2.a-size-medium span",
+    M_3: `a[href*="/dp/"] h2, a[href*="/product/"] h2`,
+  },
   PRICES: {
     CURRENT: "div[data-cy='price-recipe'] span.a-price span.a-offscreen",
     LIST: ".a-price.a-text-price .a-offscreen",
     LIST_1: ".a-price.a-text-price",
   },
-
   CATEGORY: "[data-csa-c-product-type]",
   RATINGS: {
     RATING: "div[data-cy='reviews-block'] i.a-icon-star-small span.a-icon-alt",
