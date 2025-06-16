@@ -1,200 +1,628 @@
 import { createRoot } from "react-dom/client";
 import { PRODUCT_SELECTORS, QUERY_SELECTORS } from "../constants/selectors";
 
+/**
+ * DOM Utility Library
+ * Provides safe, optimized DOM manipulation methods with comprehensive error handling
+ */
 const DomUtils = {
   /**
-   * Safely queries a single DOM element using a CSS selector.
-   * @param {string} selector - The CSS selector to query.
-   * @param {HTMLElement} [parent=document] - The parent element to query within. Defaults to the document.
-   * @returns {HTMLElement|null} - The first matching element, or null if none found or the selector is invalid.
+   * Safely query a single DOM element
+   * @param {string} selector - CSS selector
+   * @param {ParentNode} [parent=document] - Parent element to query within
+   * @returns {Element|null} Found element or null
    */
   qs(selector, parent = document) {
+    if (typeof selector !== "string" || !(parent instanceof Node)) {
+      console.error("Invalid parameters:", { selector, parent });
+      return null;
+    }
+
     try {
       return parent.querySelector(selector);
     } catch (error) {
-      console.error("Invalid selector:", selector, error);
+      console.error(`Query failed for selector "${selector}":`, error);
       return null;
     }
   },
 
   /**
-   * Safely queries multiple DOM elements using a CSS selector.
-   * @param {string} selector - The CSS selector to query.
-   * @param {HTMLElement} [parent=document] - The parent element to query within. Defaults to the document.
-   * @returns {HTMLElement[]} - An array of matching elements, or an empty array if none found or the selector is invalid.
+   * Safely query multiple DOM elements
+   * @param {string} selector - CSS selector
+   * @param {ParentNode} [parent=document] - Parent element to query within
+   * @returns {Array<Element>} Array of found elements (empty if none)
    */
   qsa(selector, parent = document) {
+    if (typeof selector !== "string" || !(parent instanceof Node)) {
+      console.error("Invalid parameters:", { selector, parent });
+      return [];
+    }
+
     try {
       return Array.from(parent.querySelectorAll(selector));
     } catch (error) {
-      console.error("Invalid selector:", selector, error);
+      console.error(`QueryAll failed for selector "${selector}":`, error);
       return [];
     }
   },
 
   /**
-   * Creates an HTML element with specified attributes and text content.
-   * @param {string} tag - The tag name of the element to create.
-   * @param {Object} [attrs={}] - An object representing the attributes to set on the element.
-   * @param {string} [text=''] - The text content to set for the element.
-   * @returns {HTMLElement} - The newly created HTML element.
+   * Create a DOM element with attributes and text
+   * @param {string} tag - HTML tag name
+   * @param {Object} [attrs={}] - Attributes object
+   * @param {string} [text=""] - Text content
+   * @returns {HTMLElement} Created element
    */
   createElement(tag, attrs = {}, text = "") {
-    const element = document.createElement(tag);
-    Object.entries(attrs).forEach(([key, value]) => {
-      element.setAttribute(key, value);
-    });
-    if (text) element.textContent = text;
-    return element;
-  },
-
-  /**
-   * Injects a React component into the specified container element.
-   * @param {React.ReactElement} component - The React component to inject.
-   * @param {HTMLElement} container - The HTML element to inject the React component into.
-   * @param {Object} [options={}] - An object of options.
-   * @param {string} [options.id] - The ID to set on the wrapping element.
-   * @param {string} [options.className] - The class name to set on the wrapping element.
-   * @param {boolean} [options.prepend=false] - A boolean indicating whether to prepend the wrapping element to the container, or append it.
-   * @param {boolean} [options.isRoot=false] - A boolean indicating whether the container is the root element of the React app.
-   * If true, the component will be rendered directly into the container, without a wrapping element.
-   * @returns {void}
-   */
-  injectReactComponent(component, container, options = {}) {
-    if (!container || !(container instanceof HTMLElement)) return;
-    const { id, className = "", prepend = false, isRoot = false } = options;
-    let wrapper;
-
-    if (!isRoot) {
-      wrapper = this.createElement("div", { class: className });
-      if (id) wrapper.id = id;
-      prepend ? container.prepend(wrapper) : container.append(wrapper);
-    } else {
-      wrapper = container;
+    if (typeof tag !== "string") {
+      console.error("Invalid tag parameter:", tag);
+      return document.createElement("div"); // Fallback
     }
 
-    const root = createRoot(wrapper);
-    root.render(component);
+    try {
+      const element = document.createElement(tag);
+
+      // Set attributes safely
+      if (attrs && typeof attrs === "object") {
+        Object.entries(attrs).forEach(([key, value]) => {
+          try {
+            if (value !== null && value !== undefined) {
+              element.setAttribute(key, String(value));
+            }
+          } catch (attrError) {
+            console.error(`Failed to set attribute ${key}:`, attrError);
+          }
+        });
+      }
+
+      if (text) element.textContent = text;
+      return element;
+    } catch (error) {
+      console.error("Element creation failed:", error);
+      return document.createElement("div"); // Fallback
+    }
   },
 
   /**
-   * Waits for an element to exist in the DOM and returns it.
-   * @param {string} selector - The CSS selector to query.
-   * @param {number} [timeout=5000] - The maximum time to wait in milliseconds.
-   * @param {number} [interval=500] - The interval in milliseconds to wait between checks.
-   * @returns {Promise<HTMLElement>} - A promise resolving to the element when it exists, or rejecting with an error after the timeout.
+   * Safely get text content from a descendant element
+   * @param {Element} element - Parent element
+   * @param {string} selector - CSS selector for target element
+   * @returns {string|null} Text content or null
+   */
+  getTextContent(element, selector) {
+    if (!(element instanceof Element) || typeof selector !== "string") {
+      console.error("Invalid parameters:", { element, selector });
+      return null;
+    }
+
+    try {
+      return element.querySelector(selector)?.textContent?.trim() ?? null;
+    } catch (error) {
+      console.error("Text content extraction failed:", error);
+      return null;
+    }
+  },
+
+  /**
+   * Safely get an attribute value from a descendant element
+   * @param {Element} element - Parent element
+   * @param {string} selector - CSS selector for target element
+   * @param {string} attr - Attribute name
+   * @returns {string|null} Attribute value or null
+   */
+  getAttribute(element, selector, attr) {
+    if (
+      !(element instanceof Element) ||
+      typeof selector !== "string" ||
+      typeof attr !== "string"
+    ) {
+      console.error("Invalid parameters:", { element, selector, attr });
+      return null;
+    }
+
+    try {
+      const target = element.querySelector(selector);
+      return target?.getAttribute(attr) ?? null;
+    } catch (error) {
+      console.error("Attribute extraction failed:", error);
+      return null;
+    }
+  },
+
+  /**
+   * Get current page URL
+   * @returns {string} Current URL
+   */
+  getPageUrl() {
+    try {
+      return window.location.href;
+    } catch (error) {
+      console.error("Failed to get page URL:", error);
+      return "";
+    }
+  },
+
+  /**
+   * Inject a React component into the DOM
+   * @param {React.ReactNode} component - React component to render
+   * @param {HTMLElement} container - Container element
+   * @param {Object} [options={}] - Configuration options
+   * @param {string} [options.id] - Wrapper element ID
+   * @param {string} [options.className=""] - Wrapper element class
+   * @param {boolean} [options.prepend=false] - Prepend instead of append
+   * @param {boolean} [options.isRoot=false] - Use container as root directly
+   */
+  injectReactComponent(component, container, options = {}) {
+    if (!container || !(container instanceof HTMLElement)) {
+      console.error("Invalid container:", container);
+      return;
+    }
+
+    if (!component) {
+      console.error("No component provided");
+      return;
+    }
+
+    try {
+      const { id, className = "", prepend = false, isRoot = false } = options;
+      let wrapper;
+
+      if (!isRoot) {
+        wrapper = this.createElement("div", { class: className });
+        if (id) wrapper.id = id;
+        prepend ? container.prepend(wrapper) : container.append(wrapper);
+      } else {
+        wrapper = container;
+      }
+
+      const root = createRoot(wrapper);
+      root.render(component);
+    } catch (error) {
+      console.error("React component injection failed:", error);
+    }
+  },
+
+  /**
+   * Wait for an element to appear in the DOM
+   * @param {string} selector - CSS selector
+   * @param {number} [timeout=5000] - Timeout in ms
+   * @param {number} [interval=500] - Check interval in ms
+   * @returns {Promise<Element>} Promise resolving to the element
    */
   waitForElement(selector, timeout = 5000, interval = 500) {
+    if (typeof selector !== "string") {
+      return Promise.reject(new Error("Invalid selector"));
+    }
+
     const startTime = Date.now();
 
     return new Promise((resolve, reject) => {
       const check = () => {
-        const element = document.querySelector(selector);
-        if (element) return resolve(element);
+        try {
+          const element = document.querySelector(selector);
+          if (element) {
+            return resolve(element);
+          }
 
-        if (Date.now() - startTime >= timeout) {
-          return reject(
-            new Error(`Element ${selector} not found within ${timeout}ms`)
+          if (Date.now() - startTime >= timeout) {
+            return reject(
+              new Error(`Element "${selector}" not found within ${timeout}ms`)
+            );
+          }
+
+          setTimeout(
+            check,
+            Math.min(interval, timeout - (Date.now() - startTime))
           );
+        } catch (error) {
+          reject(error);
         }
-
-        setTimeout(check, interval);
       };
 
       check();
     });
   },
+
+  /**
+   * Remove all child nodes from an element
+   * @param {HTMLElement} element - Target element
+   */
+  empty(element) {
+    if (!(element instanceof HTMLElement)) {
+      console.error("Invalid element:", element);
+      return;
+    }
+
+    try {
+      while (element.firstChild) {
+        element.removeChild(element.firstChild);
+      }
+    } catch (error) {
+      console.error("Failed to empty element:", error);
+    }
+  },
+
+  /**
+   * Toggle class on an element
+   * @param {HTMLElement} element - Target element
+   * @param {string} className - Class to toggle
+   * @param {boolean} [force] - Force add/remove
+   */
+  toggleClass(element, className, force) {
+    if (!(element instanceof HTMLElement) || typeof className !== "string") {
+      console.error("Invalid parameters:", { element, className });
+      return;
+    }
+
+    try {
+      element.classList.toggle(className, force);
+    } catch (error) {
+      console.error("Failed to toggle class:", error);
+    }
+  },
 };
 
+/**
+ * Utility for extracting Amazon product data from DOM elements
+ * Follows best practices for error handling, performance, and clean code
+ */
 const AmazonDomUtils = {
   /**
-   * Finds all Amazon product containers on the current page.
-   * @returns {HTMLElement[]} - An array of HTML elements, each representing a product container.
+   * Finds all Amazon product containers on the page
+   * @returns {Array<HTMLElement>} Array of product container elements
    */
   findAmazonProductContainers() {
-    return DomUtils.qsa(QUERY_SELECTORS.SEARCH_PRODUCT_CONTAINERS);
+    try {
+      return Array.from(
+        document.querySelectorAll(QUERY_SELECTORS.SEARCH_PRODUCT_CONTAINERS)
+      );
+    } catch (error) {
+      console.error("Error finding product containers:", error);
+      return [];
+    }
   },
 
   /**
-   * Retrieves the category of a product from a given HTML element.
-   * @param {HTMLElement} element - The HTML element representing a product.
-   * @returns {string|null} - The product category if available, otherwise null.
+   * Gets product category from element
+   * @param {HTMLElement} element - Product container element
+   * @returns {string|null} Product category or null if not found
    */
   getProductCategory(element) {
-    return (
-      element?.querySelector(PRODUCT_SELECTORS.CATEGORY)?.dataset
-        ?.csaCProductType || null
-    );
+    if (!element) return null;
+    try {
+      return (
+        element.querySelector(PRODUCT_SELECTORS.CATEGORY)?.dataset
+          ?.csaCProductType || null
+      );
+    } catch (error) {
+      console.error("Error getting product category:", error);
+      return null;
+    }
   },
 
   /**
-   * Retrieves the ASIN of a product from a given HTML element.
-   * @param {HTMLElement} element - The HTML element representing a product.
-   * @returns {string|null} - The product ASIN if available, otherwise null.
+   * Extracts ASIN from product element using multiple fallback methods
+   * @param {HTMLElement} element - Product container element
+   * @returns {string|null} ASIN or null if not found
    */
   getProductAsin(element) {
-    let asin =
-      element
-        ?.querySelector(PRODUCT_SELECTORS.ASIN)
-        ?.dataset.componentProps.match(/"asin":"(.*?)"/)[1] ||
-      element.querySelector(QUERY_SELECTORS.SEARCH_PRODUCT_ATTRIBUTES)?.dataset
-        .asin ||
-      null;
-    if (!asin) {
+    if (!element) return null;
+
+    try {
+      // Method 1: From component props
+      const componentProps = element
+        .querySelector(PRODUCT_SELECTORS.ASIN)
+        ?.dataset?.componentProps?.match(/"asin":"(.*?)"/)[1];
+      if (componentProps) return componentProps;
+
+      // Method 2: From data-asin attribute
+      const dataAsin = element.querySelector(
+        QUERY_SELECTORS.SEARCH_PRODUCT_ATTRIBUTES
+      )?.dataset?.asin;
+      if (dataAsin) return dataAsin;
+
+      // Method 3: From product URL
       const productUrl = this.getProductUrl(element);
-      asin = productUrl?.match(/\/dp\/([A-Z0-9]{10})/)?.[1] || null;
+      if (productUrl) {
+        const asinMatch = productUrl.match(/\/dp\/([A-Z0-9]{10})/);
+        if (asinMatch) return asinMatch[1];
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error extracting ASIN:", error);
+      return null;
     }
-    return asin;
   },
 
   /**
-   * Retrieves the title of a product from a given HTML element.
-   * @param {HTMLElement} element - The HTML element representing a product.
-   * @returns {string|null} - The product title if available, otherwise null.
+   * Checks if product is sponsored
+   * @param {HTMLElement} element - Product container element
+   * @returns {boolean} True if sponsored
+   */
+  isProductSponsored(element) {
+    if (!element) return false;
+    try {
+      return Boolean(element.querySelector(PRODUCT_SELECTORS.SPONSORED));
+    } catch (error) {
+      console.error("Error checking sponsored status:", error);
+      return false;
+    }
+  },
+
+  /**
+   * Gets product title text
+   * @param {HTMLElement} element - Product container element
+   * @returns {string|null} Title text or null
    */
   getProductTitle(element) {
-    return (
-      element?.querySelector(PRODUCT_SELECTORS.TITLE)?.textContent.trim() ||
-      null
-    );
+    if (!element) return null;
+    try {
+      const titleElement = element.querySelector(PRODUCT_SELECTORS.TITLE);
+      return titleElement?.textContent?.trim() || null;
+    } catch (error) {
+      console.error("Error getting product title:", error);
+      return null;
+    }
   },
 
   /**
-   * Retrieves the price of a product from a given HTML element.
-   * @param {HTMLElement} element - The HTML element representing a product.
-   * @returns {string|null} - The product price if available, otherwise null.
+   * Extracts and calculates price information
+   * @param {HTMLElement} element - Product container element
+   * @returns {Object|null} Price object or null
    */
-  getProductPrice(element) {
-    return element?.querySelector(PRODUCT_SELECTORS.PRICE)?.textContent || null;
+  getProductPrices(element) {
+    if (!element) return null;
+
+    /**
+     * Safely extracts and parses price from selector
+     * @param {string} selector - CSS selector
+     * @param {HTMLElement} [parent=element] - Parent element
+     * @returns {number|null} Parsed price or null
+     */
+    const parsePrice = (selector, parent = element) => {
+      try {
+        const textContent = parent.querySelector(selector)?.textContent?.trim();
+        if (!textContent) return null;
+
+        const price = parseFloat(textContent.replace(/[^\d.-]/g, ""));
+        return isNaN(price) ? null : price;
+      } catch (error) {
+        console.error(`Error parsing price from ${selector}:`, error);
+        return null;
+      }
+    };
+
+    try {
+      const currentPrice =
+        parsePrice(PRODUCT_SELECTORS.PRICES.CURRENT) ||
+        parsePrice(PRODUCT_SELECTORS.PRICES.CURRENT_FALLBACK);
+
+      const listPrice =
+        parsePrice(PRODUCT_SELECTORS.PRICES.LIST) ||
+        parsePrice(PRODUCT_SELECTORS.PRICES.LIST_1);
+
+      if (currentPrice === null) return null;
+
+      return {
+        current: currentPrice,
+        list: listPrice,
+        discount:
+          listPrice && currentPrice
+            ? Math.round(((listPrice - currentPrice) / listPrice) * 100)
+            : null,
+      };
+    } catch (error) {
+      console.error("Error getting product prices:", error);
+      return null;
+    }
   },
 
   /**
-   * Retrieves the URL of a product from a given HTML element.
-   * @param {HTMLElement} element - The HTML element representing a product.
-   * @returns {string|null} - The product URL if available, otherwise null.
+   * Extracts review information including star distribution
+   * @param {HTMLElement} element - Product container element
+   * @returns {Object} Review data
+   */
+  getProductReviews(element) {
+    if (!element) return { rating: null, count: null, starsDistribution: null };
+
+    /**
+     * Parses star distribution from rating popover
+     * @returns {Object|null} Star distribution or null
+     */
+    const parseStarsDistribution = () => {
+      try {
+        const popoverContent = element.querySelector(
+          PRODUCT_SELECTORS.RATINGS.STAR
+        )?.textContent;
+        if (!popoverContent) return null;
+
+        const stars = {};
+        const matches = popoverContent.matchAll(/(\d+)%\s*(\d)-star/g);
+
+        for (const match of matches) {
+          const [, percent, star] = match;
+          if (percent && star) stars[`${star}star`] = parseInt(percent, 10);
+        }
+
+        return Object.keys(stars).length ? stars : null;
+      } catch (error) {
+        console.error("Error parsing star distribution:", error);
+        return null;
+      }
+    };
+
+    try {
+      const ratingText = element.querySelector(
+        PRODUCT_SELECTORS.RATINGS.RATING
+      )?.textContent;
+      const countText = element.querySelector(
+        PRODUCT_SELECTORS.RATINGS.COUNT
+      )?.textContent;
+
+      return {
+        rating: ratingText ? parseFloat(ratingText) : null,
+        count: countText ? parseInt(countText.replace(/\D/g, ""), 10) : null,
+        starsDistribution: parseStarsDistribution(),
+      };
+    } catch (error) {
+      console.error("Error getting product reviews:", error);
+      return { rating: null, count: null, starsDistribution: null };
+    }
+  },
+
+  /**
+   * Extracts product variant information
+   * @param {HTMLElement} element - Product container element
+   * @returns {Object} Variant data
+   */
+  getProductVariants(element) {
+    if (!element) return { colors: null };
+
+    /**
+     * Extracts color variant information
+     * @returns {Object|null} Color variant data or null
+     */
+    const extractColorVariants = () => {
+      try {
+        const content = element
+          .querySelector(PRODUCT_SELECTORS.VARIANTS.COLOR)
+          ?.textContent?.trim();
+        if (!content) return null;
+
+        const match = content.match(/\+(\d+)/);
+        return {
+          count: match?.[1] ? parseInt(match[1], 10) : null,
+          text: content,
+        };
+      } catch (error) {
+        console.error("Error extracting color variants:", error);
+        return null;
+      }
+    };
+
+    return {
+      colors: extractColorVariants(),
+    };
+  },
+
+  /**
+   * Extracts performance metrics
+   * @param {HTMLElement} element - Product container element
+   * @returns {Object} Performance data
+   */
+  getProductPerformance(element) {
+    if (!element) return { boughtPastMonth: null, badge: null };
+
+    try {
+      const boughtPastMonthText = element.querySelector(
+        PRODUCT_SELECTORS.PERFORMANCE.BOUGHT_PAST_MONTH
+      )?.textContent;
+      const badgeText = element
+        .querySelector(PRODUCT_SELECTORS.PERFORMANCE.BADGE)
+        ?.textContent?.trim();
+
+      return {
+        boughtPastMonth: boughtPastMonthText
+          ? parseInt(boughtPastMonthText.replace(/\D/g, ""), 10)
+          : null,
+        badge: badgeText || null,
+      };
+    } catch (error) {
+      console.error("Error getting product performance:", error);
+      return { boughtPastMonth: null, badge: null };
+    }
+  },
+
+  /**
+   * Checks if product is Prime eligible
+   * @param {HTMLElement} element - Product container element
+   * @returns {boolean} True if Prime eligible
+   */
+  isPrimeEligible(element) {
+    if (!element) return false;
+    try {
+      return Boolean(
+        element.querySelector(PRODUCT_SELECTORS.IS_PRIME_ELIGIBLE)
+      );
+    } catch (error) {
+      console.error("Error checking Prime eligibility:", error);
+      return false;
+    }
+  },
+
+  /**
+   * Gets the product URL from a product container element.
+   * @param {HTMLElement} element - The product container element.
+   * @returns {string|null} The product URL or null if not found.
    */
   getProductUrl(element) {
-    const url = element
-      .querySelector(PRODUCT_SELECTORS.URL)
-      .getAttribute("href");
-    return url ? `${window.location.origin}${url}` : null;
+    if (!element) return null;
+    try {
+      const url = element.querySelector(PRODUCT_SELECTORS.URL)?.href || null;
+      if (url) return url;
+      return new URL(url, window.location.origin).href;
+    } catch (error) {
+      console.error("Error getting product URL:", error);
+      return null;
+    }
   },
 
   /**
-   * Retrieves the image URL of a product from a given HTML element.
-   * @param {HTMLElement} element - The HTML element representing a product.
-   * @returns {string|null} - The product image URL if available, otherwise null.
+   * Extracts all relevant URLs for a product
+   * @param {HTMLElement} element - Product container element
+   * @returns {Object} URL data
    */
-  getProductImageUrl(element) {
-    return element?.querySelector(PRODUCT_SELECTORS.IMAGE_URL)?.src || null;
+  getUrls(element) {
+    if (!element) return { productUrl: null, imageUrl: null, nicheUrl: null };
+
+    try {
+      const productUrl = this.getProductUrl(element);
+      const imageElement = element.querySelector(PRODUCT_SELECTORS.IMAGE_URL);
+
+      return {
+        productUrl: productUrl,
+        imageUrl:
+          imageElement?.src ||
+          imageElement?.getAttribute("srcset")?.split(",")[0]?.trim() ||
+          null,
+        nicheUrl: DomUtils.getPageUrl(),
+      };
+    } catch (error) {
+      console.error("Error getting product URLs:", error);
+      return { productUrl: null, imageUrl: null, nicheUrl: null };
+    }
   },
 
   /**
-   * Retrieves the current page URL.
-   * @returns {string} - The URL of the current page.
+   * Gets complete product data from an element
+   * @param {HTMLElement} element - Product container element
+   * @returns {Object|null} Complete product data or null
    */
-  getPageUrl() {
-    return window.location.href;
+  getProductData(element) {
+    if (!element || !(element instanceof HTMLElement)) {
+      console.warn("Invalid product element provided");
+      return null;
+    }
+
+    try {
+      return {
+        category: this.getProductCategory(element),
+        asin: this.getProductAsin(element),
+        title: this.getProductTitle(element),
+        prices: this.getProductPrices(element),
+        reviews: this.getProductReviews(element),
+        variants: this.getProductVariants(element),
+        performance: this.getProductPerformance(element),
+        isPrime: this.isPrimeEligible(element),
+        isSponsored: this.isProductSponsored(element),
+        ...this.getUrls(element),
+        element,
+      };
+    } catch (error) {
+      console.error("Error getting complete product data:", error);
+      return null;
+    }
   },
 };
 
