@@ -96,7 +96,7 @@ const DomUtils = {
     }
 
     try {
-      return element.querySelector(selector)?.textContent?.trim() ?? null;
+      return this.qs(selector, element)?.textContent?.trim() ?? null;
     } catch (error) {
       console.error("Text content extraction failed:", error);
       return null;
@@ -121,7 +121,7 @@ const DomUtils = {
     }
 
     try {
-      const target = element.querySelector(selector);
+      const target = this.qs(selector, element);
       return target?.getAttribute(attr) ?? null;
     } catch (error) {
       console.error("Attribute extraction failed:", error);
@@ -221,44 +221,6 @@ const DomUtils = {
 
       check();
     });
-  },
-
-  /**
-   * Remove all child nodes from an element
-   * @param {HTMLElement} element - Target element
-   */
-  empty(element) {
-    if (!(element instanceof HTMLElement)) {
-      console.error("Invalid element:", element);
-      return;
-    }
-
-    try {
-      while (element.firstChild) {
-        element.removeChild(element.firstChild);
-      }
-    } catch (error) {
-      console.error("Failed to empty element:", error);
-    }
-  },
-
-  /**
-   * Toggle class on an element
-   * @param {HTMLElement} element - Target element
-   * @param {string} className - Class to toggle
-   * @param {boolean} [force] - Force add/remove
-   */
-  toggleClass(element, className, force) {
-    if (!(element instanceof HTMLElement) || typeof className !== "string") {
-      console.error("Invalid parameters:", { element, className });
-      return;
-    }
-
-    try {
-      element.classList.toggle(className, force);
-    } catch (error) {
-      console.error("Failed to toggle class:", error);
-    }
   },
 };
 
@@ -557,11 +519,40 @@ const AmazonDomUtils = {
    * @returns {string|null} The product URL or null if not found.
    */
   getProductUrl(element) {
+    const genUrl = (url) => {
+      return new URL(url, window.location.origin).href;
+    };
+
     if (!element) return null;
     try {
-      const url = element.querySelector(PRODUCT_SELECTORS.URL)?.href || null;
-      if (url) return url;
-      return new URL(url, window.location.origin).href;
+      // First try: Get the URL from the title link
+      const titleLink =
+        element.querySelector(PRODUCT_SELECTORS.URL)?.href || null;
+      if (titleLink) {
+        return genUrl(titleLink);
+      }
+
+      // Second try: Get the URL from the main product link
+      const mainLink = DomUtils.getAttribute(
+        element,
+        PRODUCT_SELECTORS.MAIN_URL,
+        PRODUCT_SELECTORS.HREF
+      );
+      if (mainLink) {
+        return genUrl(mainLink);
+      }
+
+      // Third try: Get the URL from the any product link
+      const productLink = DomUtils.getAttribute(
+        element,
+        PRODUCT_SELECTORS.PRODUCT_URL,
+        PRODUCT_SELECTORS.HREF
+      );
+      if (productLink) {
+        return genUrl(productLink);
+      }
+
+      return null;
     } catch (error) {
       console.error("Error getting product URL:", error);
       return null;
@@ -617,7 +608,6 @@ const AmazonDomUtils = {
         isPrime: this.isPrimeEligible(element),
         isSponsored: this.isProductSponsored(element),
         ...this.getUrls(element),
-        element,
       };
     } catch (error) {
       console.error("Error getting complete product data:", error);
