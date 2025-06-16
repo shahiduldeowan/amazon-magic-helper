@@ -320,8 +320,25 @@ const AmazonDomUtils = {
   getProductTitle(element) {
     if (!element) return null;
     try {
-      const titleElement = element.querySelector(PRODUCT_SELECTORS.TITLE);
-      return titleElement?.textContent?.trim() || null;
+      // Method 1: From title element
+      const title = DomUtils.getTextContent(element, PRODUCT_SELECTORS.TITLE);
+      if (title) return title;
+
+      // Method 2: From title span element
+      const titleSpan = DomUtils.getTextContent(
+        element,
+        PRODUCT_SELECTORS.TITLE_1
+      );
+      if (titleSpan) return titleSpan;
+
+      // Method 3: From title link element
+      const titleLink = DomUtils.getTextContent(
+        element,
+        PRODUCT_SELECTORS.TITLE_2
+      );
+      if (titleLink) return titleLink;
+
+      return null;
     } catch (error) {
       console.error("Error getting product title:", error);
       return null;
