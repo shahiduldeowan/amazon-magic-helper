@@ -321,20 +321,23 @@ const AmazonDomUtils = {
     if (!element) return null;
     try {
       // Method 1: From title element
-      const title = DomUtils.getTextContent(element, PRODUCT_SELECTORS.TITLE);
+      const title = DomUtils.getTextContent(
+        element,
+        PRODUCT_SELECTORS.TITLES.M_1
+      );
       if (title) return title;
 
       // Method 2: From title span element
       const titleSpan = DomUtils.getTextContent(
         element,
-        PRODUCT_SELECTORS.TITLE_1
+        PRODUCT_SELECTORS.TITLES.M_2
       );
       if (titleSpan) return titleSpan;
 
       // Method 3: From title link element
       const titleLink = DomUtils.getTextContent(
         element,
-        PRODUCT_SELECTORS.TITLE_2
+        PRODUCT_SELECTORS.TITLES.M_3
       );
       if (titleLink) return titleLink;
 
