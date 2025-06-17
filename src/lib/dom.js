@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { PRODUCT_SELECTORS, QUERY_SELECTORS } from "../constants/selectors";
 import {
+  cleanAmazonProductURL,
   getCleanBoughtPastMonth,
   getCleanTrackingURL,
   getGenerateURL,
@@ -638,7 +639,7 @@ const AmazonDomUtils = {
       const imageElement = element.querySelector(PRODUCT_SELECTORS.IMAGE_URL);
 
       return {
-        productUrl: productUrl,
+        productUrl: cleanAmazonProductURL(productUrl),
         imageUrl:
           imageElement?.src ||
           imageElement?.getAttribute("srcset")?.split(",")[0]?.trim() ||
