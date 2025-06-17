@@ -469,33 +469,7 @@ const AmazonDomUtils = {
    * @returns {Object} Review data
    */
   getProductReviews(element) {
-    if (!element) return { rating: null, count: null, starsDistribution: null };
-
-    /**
-     * Parses star distribution from rating popover
-     * @returns {Object|null} Star distribution or null
-     */
-    const parseStarsDistribution = () => {
-      try {
-        const popoverContent = element.querySelector(
-          PRODUCT_SELECTORS.RATINGS.STAR
-        )?.textContent;
-        if (!popoverContent) return null;
-
-        const stars = {};
-        const matches = popoverContent.matchAll(/(\d+)%\s*(\d)-star/g);
-
-        for (const match of matches) {
-          const [, percent, star] = match;
-          if (percent && star) stars[`${star}star`] = parseInt(percent, 10);
-        }
-
-        return Object.keys(stars).length ? stars : null;
-      } catch (error) {
-        console.error("Error parsing star distribution:", error);
-        return null;
-      }
-    };
+    if (!element) return { rating: null, count: null };
 
     try {
       const ratingText = element.querySelector(
@@ -508,11 +482,10 @@ const AmazonDomUtils = {
       return {
         rating: ratingText ? parseFloat(ratingText) : null,
         count: countText ? parseInt(countText.replace(/\D/g, ""), 10) : null,
-        starsDistribution: parseStarsDistribution(),
       };
     } catch (error) {
       console.error("Error getting product reviews:", error);
-      return { rating: null, count: null, starsDistribution: null };
+      return { rating: null, count: null };
     }
   },
 
