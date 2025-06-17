@@ -552,29 +552,31 @@ const AmazonDomUtils = {
   },
 
   /**
-   * Extracts performance metrics
-   * @param {HTMLElement} element - Product container element
-   * @returns {Object} Performance data
+   * Extracts performance metrics from a product container element
+   * @param {HTMLElement|null} element - Product container element
+   * @returns {Object} Performance data with boughtPastMonth and badge properties
    */
   getProductPerformance(element) {
+    // Early return for null/undefined elements
     if (!element) return { boughtPastMonth: null, badge: null };
 
     try {
-      const boughtPastMonthText = element.querySelector(
-        PRODUCT_SELECTORS.PERFORMANCE.BOUGHT_PAST_MONTH
-      )?.textContent;
-      const badgeText = element
-        .querySelector(PRODUCT_SELECTORS.PERFORMANCE.BADGE)
-        ?.textContent?.trim();
-
-      const boughtCount = getCleanBoughtPastMonth(boughtPastMonthText);
+      // Use optional chaining and nullish coalescing for cleaner code
+      const boughtPastMonthText =
+        element.querySelector(PRODUCT_SELECTORS.PERFORMANCE.BOUGHT_PAST_MONTH)
+          ?.textContent ?? null;
+      const badgeText =
+        element
+          .querySelector(PRODUCT_SELECTORS.PERFORMANCE.BADGE)
+          ?.textContent?.trim() ?? null;
 
       return {
-        boughtPastMonth: boughtCount,
-        badge: badgeText || null,
+        boughtPastMonth: getCleanBoughtPastMonth(boughtPastMonthText),
+        badge: badgeText,
       };
     } catch (error) {
       console.error("Error getting product performance:", error);
+      // Maintain consistent return shape
       return { boughtPastMonth: null, badge: null };
     }
   },
