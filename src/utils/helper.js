@@ -59,6 +59,26 @@ export function getCleanTrackingURL(url) {
 }
 
 /**
+ * Takes an Amazon product URL and returns the cleaned URL with just the ASIN,
+ * or null if the input URL is invalid.
+ *
+ * @param {string} url - The URL to clean.
+ * @returns {string|null} The cleaned URL or null if the input URL is invalid.
+ */
+export function cleanAmazonProductURL(url) {
+  try {
+    const asinMatch = url.match(/\/dp\/([A-Z0-9]{10})/i);
+    if (!asinMatch) return null;
+    const asin = asinMatch[1];
+    return getGenerateURL(`/dp/${asin}`);
+  } catch (error) {
+    console.warn("URL cleaning failed:", url);
+    console.error(error);
+    return null;
+  }
+}
+
+/**
  * Parses and cleans the "bought past month" count text into a numeric value.
  * Handles formats like "500", "5K", "1K+", etc., applying a buffer for '+' values.
  *
