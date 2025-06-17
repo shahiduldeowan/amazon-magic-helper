@@ -1,6 +1,10 @@
 import { createRoot } from "react-dom/client";
 import { PRODUCT_SELECTORS, QUERY_SELECTORS } from "../constants/selectors";
-import { getCleanTrackingURL, getGenerateURL } from "../utils/helper";
+import {
+  getCleanBoughtPastMonth,
+  getCleanTrackingURL,
+  getGenerateURL,
+} from "../utils/helper";
 
 /**
  * DOM Utility Library
@@ -563,10 +567,10 @@ const AmazonDomUtils = {
         .querySelector(PRODUCT_SELECTORS.PERFORMANCE.BADGE)
         ?.textContent?.trim();
 
+      const boughtCount = getCleanBoughtPastMonth(boughtPastMonthText);
+
       return {
-        boughtPastMonth: boughtPastMonthText
-          ? parseInt(boughtPastMonthText.replace(/\D/g, ""), 10)
-          : null,
+        boughtPastMonth: boughtCount,
         badge: badgeText || null,
       };
     } catch (error) {
