@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { PRODUCT_SELECTORS, QUERY_SELECTORS } from "../constants/selectors";
+import { getCleanTrackingURL, getGenerateURL } from "../utils/helper";
 
 /**
  * DOM Utility Library
@@ -252,10 +253,39 @@ const AmazonDomUtils = {
   getProductCategory(element) {
     if (!element) return null;
     try {
-      return (
-        element.querySelector(PRODUCT_SELECTORS.CATEGORY)?.dataset
-          ?.csaCProductType || null
+      // Method 1: From data-csa-c-product-type attribute
+      const csaCProductTypeElement = DomUtils.qs(
+        PRODUCT_SELECTORS.CATEGORIES.M_1,
+        element
       );
+      const csaCProductType = csaCProductTypeElement?.dataset?.csaCProductType;
+      if (csaCProductType) return csaCProductType;
+
+      // Method 2: Check badge supplementary text (most reliable)
+      const badgeText = DomUtils.getTextContent(
+        element,
+        PRODUCT_SELECTORS.CATEGORIES.M_2
+      );
+      const categoryMatch = badgeText?.match(/in (.+)/);
+      if (categoryMatch) return categoryMatch[1].trim();
+
+      // Method 3: Infer from URL keywords
+      const productUrl = DomUtils.getAttribute(
+        element,
+        PRODUCT_SELECTORS.CATEGORIES.M_3,
+        PRODUCT_SELECTORS.HREF
+      );
+
+      if (productUrl) {
+        if (productUrl.includes("keywords=")) {
+          const match = productUrl.match(/keywords=([^&]+)/);
+          if (match) {
+            return decodeURIComponent(match[1].replace(/\+/g, " "));
+          }
+        }
+      }
+
+      return null;
     } catch (error) {
       console.error("Error getting product category:", error);
       return null;
@@ -305,7 +335,36 @@ const AmazonDomUtils = {
   isProductSponsored(element) {
     if (!element) return false;
     try {
-      return Boolean(element.querySelector(PRODUCT_SELECTORS.SPONSORED));
+      // Method 1: From sponsored badge
+      if (DomUtils.qs(PRODUCT_SELECTORS.SPONSORS.M_1, element)) {
+        return true;
+      }
+
+      // Method 2: Check for "Sponsored Ad" text in the title or other elements
+      const title = DomUtils.getTextContent(
+        element,
+        PRODUCT_SELECTORS.SPONSORS.M_2
+      );
+      if (title && title.includes("Sponsored Ad")) {
+        return true;
+      }
+
+      // Method 3: check for specific sponsored class or attributes
+      const sponsoredElements = DomUtils.qsa(
+        PRODUCT_SELECTORS.SPONSORS.M_3,
+        element
+      );
+      if (sponsoredElements.length > 0) {
+        return true;
+      }
+
+      // Method 4: Another common indicator is the presence of "sspa" in the URL
+      const links = DomUtils.qsa(PRODUCT_SELECTORS.SPONSORS.M_4, element);
+      if (links.length > 0) {
+        return true;
+      }
+
+      return false;
     } catch (error) {
       console.error("Error checking sponsored status:", error);
       return false;
@@ -539,37 +598,45 @@ const AmazonDomUtils = {
    * @returns {string|null} The product URL or null if not found.
    */
   getProductUrl(element) {
-    const genUrl = (url) => {
-      return new URL(url, window.location.origin).href;
-    };
-
     if (!element) return null;
     try {
       // First try: Get the URL from the title link
       const titleLink =
-        element.querySelector(PRODUCT_SELECTORS.URL)?.href || null;
+        element.querySelector(PRODUCT_SELECTORS.URLS.M_1)?.href || null;
       if (titleLink) {
-        return genUrl(titleLink);
+        return getGenerateURL(titleLink);
       }
 
       // Second try: Get the URL from the main product link
       const mainLink = DomUtils.getAttribute(
         element,
-        PRODUCT_SELECTORS.MAIN_URL,
+        PRODUCT_SELECTORS.URLS.M_2,
         PRODUCT_SELECTORS.HREF
       );
       if (mainLink) {
-        return genUrl(mainLink);
+        return getGenerateURL(mainLink);
       }
 
       // Third try: Get the URL from the any product link
       const productLink = DomUtils.getAttribute(
         element,
-        PRODUCT_SELECTORS.PRODUCT_URL,
+        PRODUCT_SELECTORS.URLS.M_3,
         PRODUCT_SELECTORS.HREF
       );
       if (productLink) {
-        return genUrl(productLink);
+        return getGenerateURL(productLink);
+      }
+
+      // Fourth try: Get the URL from the title recipe link
+      const titleRecipeLink = DomUtils.getAttribute(
+        element,
+        PRODUCT_SELECTORS.URLS.M_4,
+        PRODUCT_SELECTORS.HREF
+      );
+      if (titleRecipeLink) {
+        const trackingUrl = getGenerateURL(titleRecipeLink);
+        const cleanUrl = getCleanTrackingURL(trackingUrl);
+        if (cleanUrl) return cleanUrl;
       }
 
       return null;
@@ -628,6 +695,7 @@ const AmazonDomUtils = {
         isPrime: this.isPrimeEligible(element),
         isSponsored: this.isProductSponsored(element),
         ...this.getUrls(element),
+        element,
       };
     } catch (error) {
       console.error("Error getting complete product data:", error);
