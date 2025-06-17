@@ -11,7 +11,12 @@ export const QUERY_SELECTORS = {
 
 export const PRODUCT_SELECTORS = {
   INNER_SECTION: "div.a-section.a-spacing-base",
-  SPONSORED: ".puis-sponsored-label-text",
+  SPONSORS: {
+    M_1: ".puis-sponsored-label-text",
+    M_2: "h2.a-size-base-plus",
+    M_3: `[aria-label*="Sponsored"], [data-cy*="sponsored"]`,
+    M_4: `a[href*="sspa"]`,
+  },
   ASIN: "[data-component-props*='asin']",
   DATA_ASIN: "[data-asin]",
   TITLES: {
@@ -24,7 +29,11 @@ export const PRODUCT_SELECTORS = {
     LIST: ".a-price.a-text-price .a-offscreen",
     LIST_1: ".a-price.a-text-price",
   },
-  CATEGORY: "[data-csa-c-product-type]",
+  CATEGORIES: {
+    M_1: "[data-csa-c-product-type]",
+    M_2: ".a-badge-supplementary-text",
+    M_3: `a[href*="/dp/"], a[href*="/product/"]`,
+  },
   RATINGS: {
     RATING: "div[data-cy='reviews-block'] i.a-icon-star-small span.a-icon-alt",
     COUNT: `div[data-cy="reviews-block"] span[data-component-type="s-client-side-analytics"] a span.a-size-base`,
@@ -39,9 +48,13 @@ export const PRODUCT_SELECTORS = {
     BADGE: ".a-badge-text",
   },
   IS_PRIME_ELIGIBLE: `i.a-icon-prime`,
-  URL: "a.a-link-normal[href*='/dp/']",
-  MAIN_URL: `a.a-link-normal.s-no-outline[href*="/dp/"], a.a-link-normal.s-no-outline[href*="/product/"]`,
-  PRODUCT_URL: `a[href*="/dp/"][href*="ref="], a[href*="/product/"][href*="ref="]`,
+
+  URLS: {
+    M_1: "a.a-link-normal[href*='/dp/']",
+    M_2: `a.a-link-normal.s-no-outline[href*="/dp/"], a.a-link-normal.s-no-outline[href*="/product/"]`,
+    M_3: `a[href*="/dp/"][href*="ref="], a[href*="/product/"][href*="ref="]`,
+    M_4: "div[data-cy='title-recipe'] a",
+  },
   IMAGE_URL: "div[data-cy='image-container'] img.s-image",
   HREF: "href",
 };
