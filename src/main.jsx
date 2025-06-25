@@ -1,9 +1,10 @@
 import { StrictMode } from "react";
 import "./index.css";
+import "./initLogger.js";
 import App from "./App.jsx";
-import dom from "./lib/dom.js";
+import { DomUtils } from "./utils/domUtils.js";
 
-dom.injectReactComponent(
+DomUtils.injectReactComponent(
   <StrictMode>
     <App />
   </StrictMode>,
