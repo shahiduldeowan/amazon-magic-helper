@@ -55,6 +55,8 @@ export const PRODUCT_SELECTORS = {
     M_2: `a.a-link-normal.s-no-outline[href*="/dp/"], a.a-link-normal.s-no-outline[href*="/product/"]`,
     M_3: `a[href*="/dp/"][href*="ref="], a[href*="/product/"][href*="ref="]`,
     M_4: "div[data-cy='title-recipe'] a",
+    M_5: "a.a-link-normal.s-line-clamp-4.s-link-style.a-text-normal[href]",
+    M_6: "div.s-product-image-container a.a-link-normal[href]",
   },
   IMAGE_URL: "div[data-cy='image-container'] img.s-image",
   HREF: "href",
