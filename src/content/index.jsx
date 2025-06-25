@@ -1,10 +1,11 @@
 import { StrictMode } from "react";
-import dom from "../lib/dom";
 import ContentPage from "./ContentPage";
 import { CREATED_ENTITY } from "../constants/selectors";
 import "../index.css";
+import "../initLogger";
+import { DomUtils } from "../utils";
 
-dom.injectReactComponent(
+DomUtils.injectReactComponent(
   <StrictMode>
     <ContentPage />
   </StrictMode>,
