@@ -18,13 +18,14 @@ export function getProductPrices(element) {
   if (!element) return null;
 
   try {
-    const currentPrice =
-      parsePriceFromElement(PRODUCT_SELECTORS.PRICES.CURRENT) ||
-      parsePriceFromElement(PRODUCT_SELECTORS.PRICES.CURRENT_FALLBACK);
+    const currentPrice = parsePriceFromElement(
+      element,
+      PRODUCT_SELECTORS.PRICES.CURRENT
+    );
 
     const listPrice =
-      parsePriceFromElement(PRODUCT_SELECTORS.PRICES.LIST) ||
-      parsePriceFromElement(PRODUCT_SELECTORS.PRICES.LIST_1);
+      parsePriceFromElement(element, PRODUCT_SELECTORS.PRICES.LIST) ||
+      parsePriceFromElement(element, PRODUCT_SELECTORS.PRICES.LIST_1);
 
     if (currentPrice === null) return null;
 
