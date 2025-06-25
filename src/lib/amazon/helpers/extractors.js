@@ -1,6 +1,6 @@
-import { SCRAPER_CONFIG } from "../../../../constants/config";
-import { PRODUCT_SELECTORS } from "../../../../constants/selectors";
-import { hasKeyAndValue, logError } from "../../../../utils";
+import { SCRAPER_CONFIG } from "../../../constants/config";
+import { PRODUCT_SELECTORS } from "../../../constants/selectors";
+import { hasKeyAndValue, logError } from "../../../utils";
 
 /**
  * Extracts ASIN from a URL string. Supports Amazon product URLs that start

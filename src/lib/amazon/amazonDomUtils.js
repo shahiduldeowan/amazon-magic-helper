@@ -1,8 +1,5 @@
-import {
-  PRODUCT_SELECTORS,
-  QUERY_SELECTORS,
-} from "../../../constants/selectors";
-import { PRODUCT_DETAILS_KEYS } from "../../../constants/strings";
+import { PRODUCT_SELECTORS, QUERY_SELECTORS } from "../../constants/selectors";
+import { PRODUCT_DETAILS_KEYS } from "../../constants/strings";
 import {
   cleanAmazonProductURL,
   DomUtils,
@@ -14,10 +11,10 @@ import {
   logError,
   logWarn,
   toCamelCase,
-} from "../../../utils";
+} from "../../utils";
 import {
-  extractAsinFromComponentProps,
-  extractAsinFromUrl,
+  // extractAsinFromComponentProps,
+  // extractAsinFromUrl,
   extractBoughtPastMonth,
   extractColorVariants,
   extractWeightFromDimensions,
@@ -45,56 +42,77 @@ export const AmazonDomUtils = {
     if (!element) return null;
     try {
       // Method 1: From data-csa-c-product-type attribute
-      const el = DomUtils.qs(PRODUCT_SELECTORS.CATEGORIES.M_1, element);
-      const type = el?.dataset?.csaCProductType;
-      if (type) return type;
+      const csaCProductTypeElement = DomUtils.qs(
+        PRODUCT_SELECTORS.CATEGORIES.M_1,
+        element
+      );
+      const csaCProductType = csaCProductTypeElement?.dataset?.csaCProductType;
+      if (csaCProductType) return csaCProductType;
 
       // Method 2: Check badge supplementary text (most reliable)
-      const badge = DomUtils.getTextContent(
+      const badgeText = DomUtils.getTextContent(
         element,
         PRODUCT_SELECTORS.CATEGORIES.M_2
       );
-      const match = badge?.match(/in (.+)/);
-      if (match) return match[1].trim();
+      const categoryMatch = badgeText?.match(/in (.+)/);
+      if (categoryMatch) return categoryMatch[1].trim();
 
       // Method 3: Infer from URL keywords
-      const url = DomUtils.getAttribute(
+      const productUrl = DomUtils.getAttribute(
         element,
         PRODUCT_SELECTORS.CATEGORIES.M_3,
         PRODUCT_SELECTORS.HREF
       );
-      const keywordMatch = url?.match(/keywords=([^&]+)/);
-      if (keywordMatch) {
-        return decodeURIComponent(match[1].replace(/\+/g, " "));
+
+      if (productUrl) {
+        if (productUrl.includes("keywords=")) {
+          const match = productUrl.match(/keywords=([^&]+)/);
+          if (match) {
+            return decodeURIComponent(match[1].replace(/\+/g, " "));
+          }
+        }
       }
 
       return null;
     } catch (error) {
-      logError("getProductCategory", error);
+      logError("Error getting product category:", error);
       return null;
     }
   },
 
+  /**
+   * Extracts ASIN from product element using multiple fallback methods
+   * @param {HTMLElement} element - Product container element
+   * @returns {string|null} ASIN or null if not found
+   */
   getProductAsin(element) {
     if (!element) return null;
 
     try {
       // Method 1: From component props
-      const el = DomUtils.qs(PRODUCT_SELECTORS.ASIN, element);
-      const asinFromProps = extractAsinFromComponentProps(el);
-      if (asinFromProps) return asinFromProps;
+      const componentProps = DomUtils.qs(
+        PRODUCT_SELECTORS.ASIN,
+        element
+      )?.dataset?.componentProps?.match(/"asin":"(.*?)"/)[1];
+      if (componentProps) return componentProps;
 
       // Method 2: From data-asin attribute
-      const dataAsin = element.querySelector(
-        QUERY_SELECTORS.SEARCH_PRODUCT_ATTRIBUTES
+      const dataAsin = DomUtils.qs(
+        QUERY_SELECTORS.SEARCH_PRODUCT_ATTRIBUTES,
+        element
       )?.dataset?.asin;
       if (dataAsin) return dataAsin;
 
       // Method 3: From product URL
       const productUrl = this.getProductUrl(element);
-      return extractAsinFromUrl(productUrl);
+      if (productUrl) {
+        const asinMatch = productUrl.match(/\/dp\/([A-Z0-9]{10})/);
+        if (asinMatch) return asinMatch[1];
+      }
+
+      return null;
     } catch (error) {
-      logError("getProductAsin", error);
+      logError("Error extracting ASIN:", error);
       return null;
     }
   },
@@ -133,7 +151,7 @@ export const AmazonDomUtils = {
     if (!element) return { colors: null };
 
     return {
-      colors: extractColorVariants(),
+      colors: extractColorVariants(element),
     };
   },
 
@@ -194,37 +212,80 @@ export const AmazonDomUtils = {
     }
   },
 
+  /**
+   * Gets the product URL from a product container element.
+   * @param {HTMLElement} element - The product container element.
+   * @returns {string|null} The product URL or null if not found.
+   */
   getProductUrl(element) {
     if (!element) return null;
     try {
-      const urlChecks = [
-        () => DomUtils.qs(PRODUCT_SELECTORS.URLS.M_1, element)?.href,
-        () =>
-          DomUtils.getAttribute(
-            element,
-            PRODUCT_SELECTORS.URLS.M_2,
-            PRODUCT_SELECTORS.HREF
-          ),
-        () =>
-          DomUtils.getAttribute(
-            element,
-            PRODUCT_SELECTORS.URLS.M_3,
-            PRODUCT_SELECTORS.HREF
-          ),
-        () => {
-          const raw = DomUtils.getAttribute(
-            element,
-            PRODUCT_SELECTORS.URLS.M_4,
-            PRODUCT_SELECTORS.HREF
-          );
-          return raw ? getCleanTrackingURL(getGenerateURL(raw)) : null;
-        },
-      ];
+      // First try: Get the URL from the title link
+      const titleLink =
+        element.querySelector(PRODUCT_SELECTORS.URLS.M_1)?.href || null;
+      if (titleLink) {
+        return getGenerateURL(titleLink);
+      }
 
-      const rawUrl = urlChecks.map((fn) => fn()).find(Boolean);
-      return rawUrl ? getGenerateURL(rawUrl) : null;
+      // Second try: Get the URL from the main product link
+      const mainLink = DomUtils.getAttribute(
+        element,
+        PRODUCT_SELECTORS.URLS.M_2,
+        PRODUCT_SELECTORS.HREF
+      );
+      if (mainLink) {
+        return getGenerateURL(mainLink);
+      }
+
+      // Third try: Get the URL from the any product link
+      const productLink = DomUtils.getAttribute(
+        element,
+        PRODUCT_SELECTORS.URLS.M_3,
+        PRODUCT_SELECTORS.HREF
+      );
+      if (productLink) {
+        return getGenerateURL(productLink);
+      }
+
+      // Fourth try: Get the URL from the title recipe link
+      const titleRecipeLink = DomUtils.getAttribute(
+        element,
+        PRODUCT_SELECTORS.URLS.M_4,
+        PRODUCT_SELECTORS.HREF
+      );
+      if (titleRecipeLink) {
+        const trackingUrl = getGenerateURL(titleRecipeLink);
+        const cleanUrl = getCleanTrackingURL(trackingUrl);
+        if (cleanUrl) return cleanUrl;
+      }
+
+      // Fifth try: More specific selector targeting the product title link
+      const sponsoredLink = DomUtils.getAttribute(
+        element,
+        PRODUCT_SELECTORS.URLS.M_5,
+        PRODUCT_SELECTORS.HREF
+      );
+      if (sponsoredLink) {
+        const trackingUrl = getGenerateURL(sponsoredLink);
+        const cleanUrl = getCleanTrackingURL(trackingUrl);
+        if (cleanUrl) return cleanUrl;
+      }
+
+      // Sixth try: More specific selector targeting the product image link
+      const sponsoredImageLink = DomUtils.getAttribute(
+        element,
+        PRODUCT_SELECTORS.URLS.M_6,
+        PRODUCT_SELECTORS.HREF
+      );
+      if (sponsoredImageLink) {
+        const trackingUrl = getGenerateURL(sponsoredImageLink);
+        const cleanUrl = getCleanTrackingURL(trackingUrl);
+        if (cleanUrl) return cleanUrl;
+      }
+
+      return null;
     } catch (error) {
-      logError("getProductUrl", error);
+      logError("Error getting product URL:", error);
       return null;
     }
   },
