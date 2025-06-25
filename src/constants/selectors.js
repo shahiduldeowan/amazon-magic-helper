@@ -7,6 +7,7 @@ export const CREATED_ENTITY = {
 export const QUERY_SELECTORS = {
   SEARCH_PRODUCT_CONTAINERS: "div.puis-card-container.s-card-container",
   SEARCH_PRODUCT_ATTRIBUTES: "[data-asin]",
+  PRODUCT_DETAILS_TABLE: "table.a-keyvalue.prodDetTable tr",
 };
 
 export const PRODUCT_SELECTORS = {
