@@ -3,6 +3,30 @@ import { PRODUCT_SELECTORS } from "../../../constants/selectors";
 import { hasKeyAndValue, logError } from "../../../utils";
 
 /**
+ * Extracts ASIN from a HTML element's dataset.componentProps string.
+ *
+ * @param {HTMLElement} element - HTML element to search for ASIN in.
+ * @returns {string|null} Extracted ASIN (10 characters) or null if not found.
+ */
+export function extractAsinFromComponentProps(element) {
+  if (!element) return null;
+  // The componentProps string is expected to be in the format:
+  return element?.dataset?.componentProps?.match(/"asin":"(.*?)"/);
+}
+
+/**
+ * Extracts ASIN from a HTML element's dataset.asin string.
+ *
+ * @param {HTMLElement} element - HTML element to search for ASIN in.
+ * @returns {string|null} Extracted ASIN (10 characters) or null if not found.
+ */
+export function extractAsinFromDataset(element) {
+  if (!element) return null;
+  // The data-asin attribute is expected to contain the ASIN directly.
+  return element?.dataset?.asin;
+}
+
+/**
  * Extracts ASIN from a URL string. Supports Amazon product URLs that start
  * with "/dp/<ASIN>".
  *
@@ -10,19 +34,9 @@ import { hasKeyAndValue, logError } from "../../../utils";
  * @returns {string|null} Extracted ASIN (10 characters) or null if not found.
  */
 export function extractAsinFromUrl(url) {
-  const asinMatch = url?.match(/\/dp\/([A-Z0-9]{10})/);
-  return asinMatch[1] ?? null;
-}
-
-/**
- * Extracts ASIN from a HTML element's dataset.componentProps string.
- *
- * @param {HTMLElement} element - HTML element to search for ASIN in.
- * @returns {string|null} Extracted ASIN (10 characters) or null if not found.
- */
-export function extractAsinFromComponentProps(element) {
-  const match = element?.dataset?.componentProps?.match(/"asin":"(.*?)"/);
-  return match[1] ?? null;
+  if (!url) return null;
+  // The ASIN is expected to be in the format "/dp/<ASIN>".
+  return url?.match(/\/dp\/([A-Z0-9]{10})/)?.[1];
 }
 
 /**
