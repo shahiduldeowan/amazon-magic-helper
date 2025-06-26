@@ -1,5 +1,4 @@
 import { SCRAPER_CONFIG } from "../../../constants/config";
-import { PRODUCT_SELECTORS } from "../../../constants/selectors";
 import { hasKeyAndValue, logError } from "../../../utils";
 
 /**
@@ -13,9 +12,9 @@ import { hasKeyAndValue, logError } from "../../../utils";
  *   variants, and the `text` property is the text content of the element.
  */
 export function extractColorVariants(element) {
+  if (!element) return null;
   try {
-    const el = element.querySelector(PRODUCT_SELECTORS.VARIANTS.COLOR);
-    const content = el?.textContent?.trim();
+    const content = element?.textContent?.trim();
     if (!content) return null;
 
     const match = content.match(/\+(\d+)/);
