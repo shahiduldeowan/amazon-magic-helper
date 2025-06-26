@@ -5,6 +5,7 @@ export const PRODUCT_DETAILS_KEYS = [
   "Item model number",
   "UPC",
   "Product Dimensions",
+  "Item Dimensions LxWxH",
   "Country of Origin",
   "Manufacturer",
   "Item Weight",
