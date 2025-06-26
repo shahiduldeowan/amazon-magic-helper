@@ -7,6 +7,14 @@ import { logError, logInfo, logWarn } from "./loggerUtils";
  */
 export const DomUtils = {
   /**
+   * Checks if the provided element is an instance of HTMLElement
+   * @param {*} element - The element to check
+   * @returns {boolean} True if the element is an HTMLElement, false otherwise
+   */
+  isElement(element) {
+    return element instanceof HTMLElement;
+  },
+  /**
    * Safely query a single DOM element
    * @param {string} selector - CSS selector
    * @param {ParentNode} [parent=document] - Parent element to query within
