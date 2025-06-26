@@ -13,6 +13,9 @@ import {
   toCamelCase,
 } from "../../utils";
 import {
+  extractAsinFromComponentProps,
+  extractAsinFromDataset,
+  extractAsinFromUrl,
   // extractAsinFromComponentProps,
   // extractAsinFromUrl,
   extractBoughtPastMonth,
@@ -41,36 +44,40 @@ export const AmazonDomUtils = {
   getProductCategory(element) {
     if (!element) return null;
     try {
-      // Method 1: From data-csa-c-product-type attribute
-      const csaCProductTypeElement = DomUtils.qs(
-        PRODUCT_SELECTORS.CATEGORIES.M_1,
-        element
-      );
-      const csaCProductType = csaCProductTypeElement?.dataset?.csaCProductType;
-      if (csaCProductType) return csaCProductType;
+      const methods = [
+        () => {
+          const el = DomUtils.qs(PRODUCT_SELECTORS.CATEGORIES.M_1, element);
+          if (!el) return null;
+          return el?.dataset?.csaCProductType;
+        },
+        () => {
+          const text = DomUtils.getTextContent(
+            element,
+            PRODUCT_SELECTORS.CATEGORIES.M_2
+          );
+          if (!text) return null;
+          return text?.match(/in (.+)/)?.[1]?.trim();
+        },
+        () => {
+          const url = DomUtils.getAttribute(
+            element,
+            PRODUCT_SELECTORS.CATEGORIES.M_3,
+            PRODUCT_SELECTORS.HREF
+          );
 
-      // Method 2: Check badge supplementary text (most reliable)
-      const badgeText = DomUtils.getTextContent(
-        element,
-        PRODUCT_SELECTORS.CATEGORIES.M_2
-      );
-      const categoryMatch = badgeText?.match(/in (.+)/);
-      if (categoryMatch) return categoryMatch[1].trim();
+          if (!url) return null;
+          if (!url.includes("keywords=")) return null;
 
-      // Method 3: Infer from URL keywords
-      const productUrl = DomUtils.getAttribute(
-        element,
-        PRODUCT_SELECTORS.CATEGORIES.M_3,
-        PRODUCT_SELECTORS.HREF
-      );
-
-      if (productUrl) {
-        if (productUrl.includes("keywords=")) {
-          const match = productUrl.match(/keywords=([^&]+)/);
+          const match = url.match(/keywords=([^&]+)/);
           if (match) {
             return decodeURIComponent(match[1].replace(/\+/g, " "));
           }
-        }
+        },
+      ];
+
+      for (const method of methods) {
+        const category = method();
+        if (category) return category;
       }
 
       return null;
@@ -89,25 +96,25 @@ export const AmazonDomUtils = {
     if (!element) return null;
 
     try {
-      // Method 1: From component props
-      const componentProps = DomUtils.qs(
-        PRODUCT_SELECTORS.ASIN,
-        element
-      )?.dataset?.componentProps?.match(/"asin":"(.*?)"/)[1];
-      if (componentProps) return componentProps;
+      const methods = [
+        () => {
+          return extractAsinFromComponentProps(
+            DomUtils.qs(PRODUCT_SELECTORS.ASIN, element)
+          );
+        },
+        () => {
+          return extractAsinFromDataset(
+            DomUtils.qs(QUERY_SELECTORS.SEARCH_PRODUCT_ATTRIBUTES, element)
+          );
+        },
+        () => {
+          return extractAsinFromUrl(this.getProductUrl(element));
+        },
+      ];
 
-      // Method 2: From data-asin attribute
-      const dataAsin = DomUtils.qs(
-        QUERY_SELECTORS.SEARCH_PRODUCT_ATTRIBUTES,
-        element
-      )?.dataset?.asin;
-      if (dataAsin) return dataAsin;
-
-      // Method 3: From product URL
-      const productUrl = this.getProductUrl(element);
-      if (productUrl) {
-        const asinMatch = productUrl.match(/\/dp\/([A-Z0-9]{10})/);
-        if (asinMatch) return asinMatch[1];
+      for (const method of methods) {
+        const asin = method();
+        if (asin) return asin;
       }
 
       return null;
