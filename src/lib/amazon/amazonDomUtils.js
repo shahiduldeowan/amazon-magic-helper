@@ -132,39 +132,42 @@ export const AmazonDomUtils = {
       PRODUCT_SELECTORS.TITLES.M_2,
       PRODUCT_SELECTORS.TITLES.M_3,
     ];
+    // Use DomUtils.getTextContent to handle both text and HTML elements
+    // This allows for more flexible title extraction
     for (const selector of selectors) {
       const text = DomUtils.getTextContent(element, selector);
       if (text) return text;
     }
+
     return null;
   },
 
   getProductReviews(element) {
-    if (!element) return { rating: null, count: null };
+    const fallback = { rating: null, count: null };
+    if (!element) return fallback;
 
     try {
-      const ratingText = element.querySelector(
-        PRODUCT_SELECTORS.RATINGS.RATING
-      )?.textContent;
-      const countText = element.querySelector(
-        PRODUCT_SELECTORS.RATINGS.COUNT
-      )?.textContent;
+      const selectors = PRODUCT_SELECTORS.RATINGS;
+      const rating = DomUtils.qs(selectors.RATING, element)?.textContent;
+      const count = DomUtils.qs(selectors.COUNT, element)?.textContent;
 
       return {
-        rating: ratingText ? parseFloat(ratingText) : null,
-        count: countText ? parseInt(countText.replace(/\D/g, ""), 10) : null,
+        rating: rating ? parseFloat(rating) : null,
+        count: count ? parseInt(count.replace(/\D/g, ""), 10) : null,
       };
     } catch (error) {
       logError("getProductReviews", error);
-      return { rating: null, count: null };
+      return fallback;
     }
   },
 
   getProductVariants(element) {
     if (!element) return { colors: null };
+    const selectors = PRODUCT_SELECTORS.VARIANTS;
+    const colorEl = DomUtils.qs(selectors.COLOR, element);
 
     return {
-      colors: extractColorVariants(element),
+      colors: extractColorVariants(colorEl),
     };
   },
 
@@ -173,19 +176,16 @@ export const AmazonDomUtils = {
     if (!element) return { boughtPastMonth: null, badge: null };
 
     try {
+      const selectors = PRODUCT_SELECTORS.PERFORMANCE;
       // Use optional chaining and nullish coalescing for cleaner code
-      const boughtEl = element.querySelector(
-        PRODUCT_SELECTORS.PERFORMANCE.BOUGHT_PAST_MONTH
+      const bought = DomUtils.getTextContent(
+        element,
+        selectors.BOUGHT_PAST_MONTH
       );
-      const boughtText = boughtEl?.textContent ?? null;
-
-      const badgeEl = element.querySelector(
-        PRODUCT_SELECTORS.PERFORMANCE.BADGE
-      );
-      const badge = badgeEl?.textContent?.trim() ?? null;
+      const badge = DomUtils.getTextContent(element, selectors.BADGE);
 
       return {
-        boughtPastMonth: extractBoughtPastMonth(boughtText),
+        boughtPastMonth: extractBoughtPastMonth(bought),
         badge,
       };
     } catch (error) {
@@ -232,68 +232,35 @@ export const AmazonDomUtils = {
    */
   getProductUrl(element) {
     if (!element) return null;
+
+    const resolveAndClean = (selector, clean = false) => {
+      const href = DomUtils.getAttribute(
+        element,
+        selector,
+        PRODUCT_SELECTORS.HREF
+      );
+
+      const url = getGenerateURL(href);
+      return clean ? getCleanTrackingURL(url) : url;
+    };
+
     try {
-      // First try: Get the URL from the title link
-      const titleLink =
-        element.querySelector(PRODUCT_SELECTORS.URLS.M_1)?.href || null;
-      if (titleLink) {
-        return getGenerateURL(titleLink);
-      }
+      const selectors = PRODUCT_SELECTORS.URLS;
+      const strategies = [
+        () => {
+          const el = DomUtils.qs(selectors.M_1, element);
+          return el ? getGenerateURL(el.href) : null;
+        },
+        () => resolveAndClean(selectors.M_2),
+        () => resolveAndClean(selectors.M_3),
+        () => resolveAndClean(selectors.M_4, true),
+        () => resolveAndClean(selectors.M_5, true),
+        () => resolveAndClean(selectors.M_6, true),
+      ];
 
-      // Second try: Get the URL from the main product link
-      const mainLink = DomUtils.getAttribute(
-        element,
-        PRODUCT_SELECTORS.URLS.M_2,
-        PRODUCT_SELECTORS.HREF
-      );
-      if (mainLink) {
-        return getGenerateURL(mainLink);
-      }
-
-      // Third try: Get the URL from the any product link
-      const productLink = DomUtils.getAttribute(
-        element,
-        PRODUCT_SELECTORS.URLS.M_3,
-        PRODUCT_SELECTORS.HREF
-      );
-      if (productLink) {
-        return getGenerateURL(productLink);
-      }
-
-      // Fourth try: Get the URL from the title recipe link
-      const titleRecipeLink = DomUtils.getAttribute(
-        element,
-        PRODUCT_SELECTORS.URLS.M_4,
-        PRODUCT_SELECTORS.HREF
-      );
-      if (titleRecipeLink) {
-        const trackingUrl = getGenerateURL(titleRecipeLink);
-        const cleanUrl = getCleanTrackingURL(trackingUrl);
-        if (cleanUrl) return cleanUrl;
-      }
-
-      // Fifth try: More specific selector targeting the product title link
-      const sponsoredLink = DomUtils.getAttribute(
-        element,
-        PRODUCT_SELECTORS.URLS.M_5,
-        PRODUCT_SELECTORS.HREF
-      );
-      if (sponsoredLink) {
-        const trackingUrl = getGenerateURL(sponsoredLink);
-        const cleanUrl = getCleanTrackingURL(trackingUrl);
-        if (cleanUrl) return cleanUrl;
-      }
-
-      // Sixth try: More specific selector targeting the product image link
-      const sponsoredImageLink = DomUtils.getAttribute(
-        element,
-        PRODUCT_SELECTORS.URLS.M_6,
-        PRODUCT_SELECTORS.HREF
-      );
-      if (sponsoredImageLink) {
-        const trackingUrl = getGenerateURL(sponsoredImageLink);
-        const cleanUrl = getCleanTrackingURL(trackingUrl);
-        if (cleanUrl) return cleanUrl;
+      for (const tryResolve of strategies) {
+        const url = tryResolve();
+        if (url) return url;
       }
 
       return null;
@@ -308,14 +275,15 @@ export const AmazonDomUtils = {
 
     try {
       const productUrl = this.getProductUrl(element);
-      const imageElement = element.querySelector(PRODUCT_SELECTORS.IMAGE_URL);
+      const imageEl = DomUtils.qs(PRODUCT_SELECTORS.IMAGE_URL, element);
+      const imageUrl =
+        imageEl?.src ||
+        imageEl?.getAttribute("srcset")?.split(",")[0]?.trim() ||
+        null;
 
       return {
         productUrl: cleanAmazonProductURL(productUrl),
-        imageUrl:
-          imageElement?.src ||
-          imageElement?.getAttribute("srcset")?.split(",")[0]?.trim() ||
-          null,
+        imageUrl,
         nicheUrl: DomUtils.getPageUrl(),
       };
     } catch (error) {
