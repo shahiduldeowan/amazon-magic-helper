@@ -6,16 +6,13 @@ import {
   formatBSRData,
   getCleanTrackingURL,
   getGenerateURL,
-  getProductPrices,
   hasKeyAndValue,
   logError,
-  logWarn,
   toCamelCase,
 } from "../../utils";
 import {
   extractBoughtPastMonth,
   extractColorVariants,
-  extractWeightFromDimensions,
 } from "./helpers/extractors";
 
 /**
@@ -95,7 +92,7 @@ export const AmazonDomUtils = {
         () => {
           const el = DomUtils.qs(PRODUCT_SELECTORS.ASIN, element);
           if (!el) return null;
-          return el?.dataset?.componentProps?.match(/"asin":"(.*?)"/);
+          return el?.dataset?.componentProps?.match(/"asin":"(.*?)"/)?.[1];
         },
         () => {
           const el = DomUtils.qs(
@@ -319,7 +316,10 @@ export const AmazonDomUtils = {
     const details = {};
     DomUtils.qsa(QUERY_SELECTORS.PRODUCT_DETAILS_TABLE, element).forEach(
       (row) => {
-        const key = row.querySelector("th")?.textContent?.trim();
+        const key = row
+          .querySelector("th")
+          ?.textContent?.replace(/\s+/g, " ")
+          ?.trim();
         const value = row.querySelector("td")?.textContent?.trim();
         if (!key && !value) return;
 
@@ -332,48 +332,5 @@ export const AmazonDomUtils = {
     );
 
     return details;
-  },
-
-  extractProductData(element) {
-    if (!element || !(element instanceof HTMLElement)) {
-      logWarn("Invalid product element provided");
-      return null;
-    }
-
-    try {
-      return {
-        category: this.getProductCategory(element),
-        asin: this.getProductAsin(element),
-        title: this.getProductTitle(element),
-        prices: getProductPrices(element),
-        reviews: this.getProductReviews(element),
-        variants: this.getProductVariants(element),
-        performance: this.getProductPerformance(element),
-        isPrime: this.isPrimeEligible(element),
-        isSponsored: this.isProductSponsored(element),
-        ...this.getUrls(element),
-        element,
-      };
-    } catch (error) {
-      logError("Error getting complete product data:", error);
-      return null;
-    }
-  },
-
-  extractProductDetails(element) {
-    if (!element || !(element instanceof HTMLElement)) {
-      logWarn("Invalid product details element provided");
-      return null;
-    }
-
-    try {
-      const details = this.getProductDetailsFromTable(element);
-      this.getProductDetailsFromList(details, element);
-      extractWeightFromDimensions(details);
-      return details;
-    } catch (error) {
-      logError("Error getting complete product data:", error);
-      return null;
-    }
   },
 };
