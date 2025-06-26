@@ -13,11 +13,6 @@ import {
   toCamelCase,
 } from "../../utils";
 import {
-  extractAsinFromComponentProps,
-  extractAsinFromDataset,
-  extractAsinFromUrl,
-  // extractAsinFromComponentProps,
-  // extractAsinFromUrl,
   extractBoughtPastMonth,
   extractColorVariants,
   extractWeightFromDimensions,
@@ -98,17 +93,22 @@ export const AmazonDomUtils = {
     try {
       const methods = [
         () => {
-          return extractAsinFromComponentProps(
-            DomUtils.qs(PRODUCT_SELECTORS.ASIN, element)
-          );
+          const el = DomUtils.qs(PRODUCT_SELECTORS.ASIN, element);
+          if (!el) return null;
+          return el?.dataset?.componentProps?.match(/"asin":"(.*?)"/);
         },
         () => {
-          return extractAsinFromDataset(
-            DomUtils.qs(QUERY_SELECTORS.SEARCH_PRODUCT_ATTRIBUTES, element)
+          const el = DomUtils.qs(
+            QUERY_SELECTORS.SEARCH_PRODUCT_ATTRIBUTES,
+            element
           );
+          if (!el) return null;
+          return el?.dataset?.asin;
         },
         () => {
-          return extractAsinFromUrl(this.getProductUrl(element));
+          const url = this.getProductUrl(element);
+          if (!url) return null;
+          return url?.match(/\/dp\/([A-Z0-9]{10})/)?.[1];
         },
       ];
 
@@ -126,11 +126,17 @@ export const AmazonDomUtils = {
 
   getProductTitle(element) {
     if (!element) return null;
-    return (
-      DomUtils.getTextContent(element, PRODUCT_SELECTORS.TITLES.M_1) ||
-      DomUtils.getTextContent(element, PRODUCT_SELECTORS.TITLES.M_2) ||
-      DomUtils.getTextContent(element, PRODUCT_SELECTORS.TITLES.M_3)
-    );
+    if (!DomUtils.isElement(element)) return null;
+    const selectors = [
+      PRODUCT_SELECTORS.TITLES.M_1,
+      PRODUCT_SELECTORS.TITLES.M_2,
+      PRODUCT_SELECTORS.TITLES.M_3,
+    ];
+    for (const selector of selectors) {
+      const text = DomUtils.getTextContent(element, selector);
+      if (text) return text;
+    }
+    return null;
   },
 
   getProductReviews(element) {
