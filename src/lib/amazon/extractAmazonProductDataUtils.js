@@ -1,5 +1,11 @@
 import { enqueueProductDetailsJob } from "../../jobs/enqueueProductDetailsJob";
-import { getProductPrices, logError, logWarn } from "../../utils";
+import {
+  formatReadableDateToISO,
+  getProductPrices,
+  logError,
+  logWarn,
+  parseImperialWeightToKg,
+} from "../../utils";
 import { AmazonDomUtils } from "./amazonDomUtils";
 import { extractWeightFromDimensions } from "./helpers/extractors";
 
@@ -37,7 +43,24 @@ export function extractProductDetails(element) {
     const details = AmazonDomUtils.getProductDetailsFromTable(element);
     AmazonDomUtils.getProductDetailsFromList(details, element);
     extractWeightFromDimensions(details);
-    return details;
+
+    if (details.dateFirstAvailable) {
+      details.dateFirstAvailable = formatReadableDateToISO(
+        details.dateFirstAvailable
+      );
+    }
+
+    return {
+      ...details,
+      dimensions:
+        details.productDimensions ||
+        details.itemDimensionsLxwxh ||
+        details.packageDimensions ||
+        null,
+      weight: details.dateFirstAvailable
+        ? parseImperialWeightToKg(details.itemWeight)
+        : null,
+    };
   } catch (error) {
     logError("Error getting complete product data:", error);
     return null;
