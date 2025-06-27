@@ -2,10 +2,13 @@ import PropTypes from "prop-types";
 import { Package, MapPin, Ruler, Weight, Hash, Calendar } from "lucide-react";
 import MetadataItem from "./MetadataItem";
 import { labels } from "../../constants/strings";
+import { useRelativeDate } from "../../hooks/useRelativeDate";
 
 const ProductMetadataCard = ({ metadata }) => {
+  const relativeDate = useRelativeDate(metadata.dateAdded);
+
   return (
-    <div className="bg-white border border-gray-200 rounded-md p-3 mb-4 shadow-sm">
+    <div className="bg-white border border-gray-200 rounded-md p-3 mb-1 shadow-sm">
       <div className="flex items-center gap-2 mb-2">
         <Package size={16} className="text-orange-600" />
         <h3 className="text-sm font-medium text-gray-900">
@@ -19,11 +22,13 @@ const ProductMetadataCard = ({ metadata }) => {
           label={labels.salesRank}
           value={metadata.salesRank}
         />
-        <MetadataItem
-          icon={Calendar}
-          label={labels.dateAdded}
-          value={metadata.dateAdded}
-        />
+        {!!relativeDate && (
+          <MetadataItem
+            icon={Calendar}
+            label={labels.dateAdded}
+            value={relativeDate}
+          />
+        )}
         <MetadataItem
           icon={Ruler}
           label={labels.dimensions}
