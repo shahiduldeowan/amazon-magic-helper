@@ -8,10 +8,12 @@ export const QUERY_SELECTORS = {
   SEARCH_PRODUCT_CONTAINERS: "div.puis-card-container.s-card-container",
   SEARCH_PRODUCT_ATTRIBUTES: "[data-asin]",
   PRODUCT_DETAILS_TABLE: "table.a-keyvalue.prodDetTable tr",
+  INNER_SECTION: {
+    S_1: "div.a-section.a-spacing-base",
+  },
 };
 
 export const PRODUCT_SELECTORS = {
-  INNER_SECTION: "div.a-section.a-spacing-base",
   SPONSORS: {
     M_1: ".puis-sponsored-label-text",
     M_2: "h2.a-size-base-plus",
