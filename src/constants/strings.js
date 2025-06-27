@@ -6,6 +6,7 @@ export const PRODUCT_DETAILS_KEYS = [
   "UPC",
   "Product Dimensions",
   "Item Dimensions LxWxH",
+  "Package Dimensions",
   "Country of Origin",
   "Manufacturer",
   "Item Weight",
@@ -38,16 +39,6 @@ export const badges = {
   hotNiche: "Hot Niche",
   highMargin: "High Margin",
   emergingTrend: "Emerging Trend",
-};
-
-// Sample metadata and analysis data for demonstration purposes
-export const sampleMetadata = {
-  salesRank: "#1,247 in Electronics",
-  dateAdded: "March 15, 2024",
-  dimensions: "12 x 7.8 x 3.5 inches",
-  weight: "3.19 pounds",
-  asin: "B09F3CWRRC",
-  countryOfOrigin: "China",
 };
 
 // Sample analysis data for demonstration purposes
