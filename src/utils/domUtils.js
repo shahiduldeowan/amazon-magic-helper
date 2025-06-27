@@ -172,13 +172,25 @@ export const DomUtils = {
     }
 
     try {
-      const { id, className = "", prepend = false, isRoot = false } = options;
+      const {
+        id,
+        className = "",
+        prepend = false,
+        isRoot = false,
+        afterend = false,
+      } = options;
       let wrapper;
 
       if (!isRoot) {
         wrapper = this.createElement("div", { class: className });
         if (id) wrapper.id = id;
-        prepend ? container.prepend(wrapper) : container.append(wrapper);
+        if (afterend) {
+          container.insertAdjacentElement("afterend", wrapper);
+        } else if (prepend) {
+          container.prepend(wrapper);
+        } else {
+          container.append(wrapper);
+        }
       } else {
         wrapper = container;
       }
