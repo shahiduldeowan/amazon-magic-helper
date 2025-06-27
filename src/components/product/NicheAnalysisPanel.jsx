@@ -51,9 +51,9 @@ export function NicheAnalysisPanel({ analysis }) {
         return "bg-gray-100 text-gray-700 border-gray-200";
     }
   };
-
+  //mb-4 rounded-md
   return (
-    <div className="bg-white border border-gray-200 rounded-md p-3 mb-4 shadow-sm">
+    <div className="bg-white border border-gray-200 p-3 shadow-sm">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <TrendingUp size={16} className="text-orange-600" />
