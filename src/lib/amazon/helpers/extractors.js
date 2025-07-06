@@ -78,23 +78,27 @@ export function extractBoughtPastMonth(countText) {
  * @returns {void} Modifies the details object in place.
  */
 export function extractWeightFromDimensions(details) {
-  if (
-    !hasKeyAndValue(details, "itemWeight") &&
-    hasKeyAndValue(details, "productDimensions")
-  ) {
-    const dimensionsMatch = details.productDimensions?.match(
-      /^([\d.]+\s*x\s*[\d.]+\s*x\s*[\d.]+\s*\w+)/
-    );
-    const weightMatch = details.productDimensions?.match(
-      /([\d.]+\s*\w+)(?:;|$)/g
-    );
+  try {
+    if (
+      !hasKeyAndValue(details, "itemWeight") &&
+      hasKeyAndValue(details, "productDimensions")
+    ) {
+      const dimensionsMatch = details.productDimensions?.match(
+        /^([\d.]+\s*x\s*[\d.]+\s*x\s*[\d.]+\s*\w+)/
+      );
+      const weightMatch = details.productDimensions?.match(
+        /([\d.]+\s*\w+)(?:;|$)/g
+      );
 
-    const dimensions = dimensionsMatch[1]?.trim();
-    const weight = weightMatch[1]?.trim();
+      const dimensions = dimensionsMatch?.[1]?.trim();
+      const weight = weightMatch?.[1]?.trim();
 
-    if (dimensions && weight) {
-      details["itemWeight"] = weight;
-      details["productDimensions"] = dimensions;
+      if (dimensions && weight) {
+        details["itemWeight"] = weight;
+        details["productDimensions"] = dimensions;
+      }
     }
+  } catch (error) {
+    logError("extractWeightFromDimensions", error);
   }
 }
