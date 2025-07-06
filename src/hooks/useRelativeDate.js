@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { formatRelativeToNow } from "../utils";
+import { formatRelativeDateToNow } from "../utils";
 
 /**
  * Memoized hook for computing relative date text
@@ -7,5 +7,5 @@ import { formatRelativeToNow } from "../utils";
  * @returns Relative string like "2 months ago"
  */
 export function useRelativeDate(date) {
-  return useMemo(() => formatRelativeToNow(date), [date]);
+  return useMemo(() => formatRelativeDateToNow(date), [date]);
 }
