@@ -32,6 +32,7 @@ export function extractProductData(element) {
       element,
     };
   } catch (error) {
+    logWarn("[extractProductData]", element);
     logError("Error getting complete product data:", error);
     return null;
   }
@@ -39,51 +40,65 @@ export function extractProductData(element) {
 
 export function extractProductDetails(element) {
   if (!element) return null;
+
   try {
     const details = AmazonDomUtils.getProductDetailsFromTable(element);
     AmazonDomUtils.getProductDetailsFromList(details, element);
     extractWeightFromDimensions(details);
 
-    if (details.dateFirstAvailable) {
+    if (details?.dateFirstAvailable) {
       details.dateFirstAvailable = formatReadableDateToISO(
         details.dateFirstAvailable
       );
     }
 
+    const dimensions =
+      details.productDimensions ??
+      details.itemDimensionsLxwxh ??
+      details.packageDimensions ??
+      null;
+
+    const rawWeight = details.itemWeight ?? details.packageWeight;
+    const weight = parseImperialWeightToKg(rawWeight);
+
     return {
       ...details,
-      dimensions:
-        details.productDimensions ||
-        details.itemDimensionsLxwxh ||
-        details.packageDimensions ||
-        null,
-      weight: details.dateFirstAvailable
-        ? parseImperialWeightToKg(details.itemWeight)
-        : null,
+      dimensions: dimensions,
+      weight: weight,
     };
   } catch (error) {
-    logError("Error getting complete product data:", error);
+    logWarn("[extractProductDetails]", element);
+    logError("Error getting complete product details data:", error);
     return null;
   }
 }
 
-export async function getAmazonAllProductData() {
+export function getAllProducts() {
+  const productNodes = AmazonDomUtils.findProductContainers();
+  if (!productNodes || productNodes.length === 0) {
+    logWarn("No product containers found on the page");
+    return [];
+  }
+  const productData = productNodes.map((element) =>
+    extractProductData(element)
+  );
+
+  if (productData.length === 0) {
+    logWarn("No valid product data extracted from the page");
+    return [];
+  }
+
+  return productData;
+}
+
+export async function getAllProductsWithDetails(products, callback = () => {}) {
   try {
-    const productNodes = AmazonDomUtils.findProductContainers();
-    if (!productNodes || productNodes.length === 0) {
-      logWarn("No product containers found on the page");
-      return [];
-    }
-    const productData = productNodes.map((element) =>
-      extractProductData(element)
-    );
-
-    if (productData.length === 0) {
-      logWarn("No valid product data extracted from the page");
+    if (!products || products.length === 0) {
+      logWarn("No products provided for detail extraction");
       return [];
     }
 
-    const finalProducts = await enqueueProductDetailsJob(productData);
+    const finalProducts = await enqueueProductDetailsJob(products, callback);
     return finalProducts;
   } catch (error) {
     logError("Error in getAmazonAllProductData:", error);
