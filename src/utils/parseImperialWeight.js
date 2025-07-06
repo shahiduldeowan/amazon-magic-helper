@@ -1,7 +1,9 @@
 /**
- * Parses a string like "1.54 pounds" or "1.6 ounces" and converts it to kilograms
- * @param weight - Weight string to parse
- * @returns Weight in kilograms (rounded to 2 decimals), or null if invalid
+ * Parse an imperial weight string (e.g. "1.92 ounces", "3 lbs", etc.) into a
+ * weight in kilograms, rounded to 2 decimal places.
+ *
+ * @param {string} weight - The string to parse
+ * @returns {number|null} The parsed weight in kilograms, or null if parsing fails
  */
 export function parseImperialWeightToKg(weight) {
   if (!weight) return null;
@@ -14,11 +16,21 @@ export function parseImperialWeightToKg(weight) {
     )
     .trim();
 
-  const match = normalized.match(/^([\d.]+)\s*(pounds?|lbs?|ounces?|oz)$/i);
+  const match = normalized.match(
+    /^([\d.]+)\s*(kilograms?|kg|grams?|g|pounds?|lbs?|ounces?|oz)$/i
+  );
   if (!match) return null;
 
   const value = parseFloat(match[1]);
   const unit = match[2].toLowerCase();
+
+  if (unit.startsWith("kilogram") || unit === "kg") {
+    return Math.round(value * 100) / 100;
+  }
+
+  if (unit.startsWith("gram") || unit === "g") {
+    return Math.round((value / 1000) * 100) / 100;
+  }
 
   if (unit.startsWith("pound") || unit === "lb" || unit === "lbs") {
     return Math.round(value * 0.45359237 * 100) / 100;
