@@ -1,4 +1,5 @@
 import moment from "moment";
+import numeral from "numeral";
 
 /**
  * Converts a human-readable date like "October 27, 2023" to "2023-10-27"
@@ -17,7 +18,19 @@ export function formatReadableDateToISO(dateString) {
  * @param isoDate - A date string like '2023-10-27'
  * @returns Relative string like '8 months ago'
  */
-export function formatRelativeToNow(isoDate) {
+export function formatRelativeDateToNow(isoDate) {
   if (!isoDate) return null;
   return moment(isoDate).fromNow();
+}
+
+/**
+ * Shortens a number to a brief, human-readable string
+ * e.g. 1000 -> "1K", 10000 -> "10K", etc.
+ * @param value - The value to format
+ * @returns The formatted string
+ */
+export function formatShortNumber(value) {
+  if (value === null || value === undefined) return "N/A";
+  if (typeof value !== "number" || isNaN(value)) return "-";
+  return numeral(value).format("0.[0]a").toUpperCase();
 }
