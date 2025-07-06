@@ -11,9 +11,10 @@ export const PRODUCT_DETAILS_KEYS = [
   "Manufacturer",
   "Item Weight",
   "Brand",
+  "Package Weight",
 ];
 
-export const labels = {
+export const LABELS = {
   metadataTitle: "Product Details",
   salesRank: "Sales Rank",
   dateAdded: "Date Added",
@@ -23,31 +24,43 @@ export const labels = {
   origin: "Origin",
 };
 
-export const competitionScore = {
+export const SCORES = {
   low: "Low",
   medium: "Medium",
   high: "High",
+  na: "N/A",
 };
 
-export const profitPotential = {
-  low: "Low",
-  medium: "Medium",
-  high: "High",
-};
-
-export const badges = {
+export const BADGES = {
   hotNiche: "Hot Niche",
   highMargin: "High Margin",
   emergingTrend: "Emerging Trend",
 };
 
-// Sample analysis data for demonstration purposes
-export const sampleAnalysis = {
-  averagePrice: 249.99,
+//---------------------------------------------------
+export const mockNicheAnalysis = {
+  averagePrice: "$29.99",
   averageRating: 4.3,
-  averageReviewCount: 1847,
+  averageReviewCount: "1.2K",
   competitionScore: "Medium",
   profitPotential: "High",
   badges: ["Hot Niche", "High Margin"],
-  totalProducts: 24,
+};
+
+export const mockNicheAnalysisLow = {
+  averagePrice: "$149.99",
+  averageRating: 3.8,
+  averageReviewCount: "456",
+  competitionScore: "High",
+  profitPotential: "Low",
+  badges: ["Emerging Trend"],
+};
+
+export const mockNicheAnalysisGreen = {
+  averagePrice: "$19.99",
+  averageRating: 4.7,
+  averageReviewCount: "2.5K",
+  competitionScore: "Low",
+  profitPotential: "High",
+  badges: ["Hot Niche", "High Margin", "Emerging Trend"],
 };
