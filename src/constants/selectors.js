@@ -8,9 +8,8 @@ export const QUERY_SELECTORS = {
   SEARCH_PRODUCT_CONTAINERS: "div.puis-card-container.s-card-container",
   SEARCH_PRODUCT_ATTRIBUTES: "[data-asin]",
   PRODUCT_DETAILS_TABLE: "table.a-keyvalue.prodDetTable tr",
-  INNER_SECTION: {
-    S_1: "div.a-section.a-spacing-base",
-  },
+  PRODUCT_INNER_SECTION: ".a-section",
+  ANALYSIS_SECTION: "div.s-main-slot",
 };
 
 export const PRODUCT_SELECTORS = {
